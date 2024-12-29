@@ -1,164 +1,127 @@
 package com.kks3.networkanalyzer
 
-import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Preview(showSystemUi = true, device = Devices.PIXEL_7)
 @Composable
-fun buttonExample() {
-    Button(
-        onClick = {
-            Log.d("buttonExample","click the button")
-        },
-    ) {
-        Text("click me ")
+fun Cell(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val cellInfo = remember { mutableStateOf(mobileInformation(context)) }  // 使用 mutableStateOf 存储网络信息
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        while(true) {
+            cellInfo.value = mobileInformation(context)
+            outputCellInfo(cellInfo.value)
+            delay(3000) // 每3秒更新一次
+        }
     }
-}
 
-@Preview(showSystemUi = true, device = Devices.PIXEL_7)
-@Composable
-fun modifierExample() {
-
-    Text(
-        text = stringResource(id = R.string.hello),
-        style = TextStyle(background = Color.Red, fontSize = 24.sp),
-        modifier = Modifier
+    Column(
+        modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .background(Color.Green)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 信号强度卡片
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "信号强度",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "${cellInfo.value?.signalStrength ?: "未知"} dBm",
+                    style = MaterialTheme.typography.displayMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = cellInfo.value?.let { cellSignalLevel(it.signalStrength) } ?: "未知",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+        }
 
+        // 网络信息卡片
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "网络信息",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Divider()
+                InfoRow(label = "运营商", value = cellInfo.value?.networkOperatorName ?: "未知")
+                InfoRow(label = "网络类型", value = cellInfo.value?.networkType ?: "未知")
+                InfoRow(label = "基站ID", value = cellInfo.value?.baseStationId ?: "未知")
+                InfoRow(label = "频率", value = cellInfo.value?.frequency ?: "未知")
+                InfoRow(label = "电话号码", value = cellInfo.value?.phoneNumber ?: "未知")
+            }
+        }
 
-    )
-    
-}
-@Composable
-fun TextExample(modifier: Modifier = Modifier) {
-//    SelectionContainer(){
-//        Text(
-//            stringResource(id = R.string.hello),
-//            modifier = modifier.fillMaxSize(),
-//            color = Color.Red,
-//            fontSize = 24.sp,
-//            maxLines = 1,
-//            style = TextStyle(
-//                background = Color.Yellow,
-//                shadow = Shadow(
-//                    color = Color.Green,
-//                    offset = Offset(5f,5f)
-//                ),
-//                textIndent = TextIndent(20.sp)
-//            )
-//        )
-//    }
-    val annotatedText = buildAnnotatedString {
-        withStyle(style = SpanStyle(Color.Red)){
-            append("锄禾日当午，\n")
+        // 在适当的位置显示加载和错误状态
+        if (isLoading) {
+            CircularProgressIndicator()
         }
-        withStyle(style = SpanStyle(Color.Green)) {
-            append("汗滴禾下土。\n")
-        }
-        withStyle(style = SpanStyle(Color.Blue)) {
-            append("谁知盘中餐，\n")
-        }
-        withStyle(style = SpanStyle(Color.Yellow)) {
-            append("粒粒皆辛苦。")
+        error?.let {
+            Text(text = it, color = MaterialTheme.colorScheme.error)
         }
     }
-    ClickableText( text = annotatedText,
-        onClick = { offset ->
-        Log.d("ClickableText", "${offset}")},
-        modifier = Modifier.fillMaxSize())
 }
+
 @Composable
-fun userNotice(){
-    val annotatedString = buildAnnotatedString {
-        append("点击登录代表您知悉和同意")
-
-        //往字符串中添加一个注解，直到遇到 pop() 。tag 为注解标识，annotation 为传递内容
-        pushStringAnnotation("protocol", annotation = "https://docs.bughub.icu/compose")
-        withStyle(style = SpanStyle(Color.Blue)) {
-            append("用户协议")
-        }
-        pop()
-
-        append("和")
-
-        pushStringAnnotation("privacy", annotation = "https://randywei.gitee.com")
-        withStyle(style = SpanStyle(Color.Blue)) {
-            append("隐私政策")
-        }
-        pop()
+private fun InfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label)
+        Text(
+            text = value,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.primary
+        )
     }
-
-    ClickableText(
-        annotatedString, onClick = { offset ->
-            //从字符串中查找注解
-            annotatedString.getStringAnnotations("protocol", start = offset, end = offset)
-                .firstOrNull()?.let { annotation ->
-                    Log.d("TextSample", "点击了用户协议：${annotation.item}")
-                }
-
-            annotatedString.getStringAnnotations("privacy", start = offset, end = offset)
-                .firstOrNull()?.let { annotation ->
-                    Log.d("TextSample", "点击了隐私政策：${annotation.item}")
-                }
-        }
-    )
 }
+
+@Preview(showSystemUi = true, device = Devices.PIXEL_7)
 @Composable
-fun clickText(modifier: Modifier = Modifier) {
-    ClickableText(
-        buildAnnotatedString {
-            append("Click ")
-        }, onClick = {
-            offset -> Log.d("ClickableText", "${offset}")
-        }
-    )
-
+fun CellPreview() {
+    MaterialTheme {
+        Cell()
+    }
 }
-@Composable
-//TODO: 绘制移动网络界面
-fun Mobile(modifier: Modifier = Modifier) {
-    TextExample()
-//    Text(text = stringResource(R.string.app_name))
-
-}
-
-
 

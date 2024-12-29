@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.kks3.networkanalyzer"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.kks3.networkanalyzer"
         minSdk = 30
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -37,10 +37,18 @@ android {
     buildFeatures {
         compose = true
     }
+    buildToolsVersion = "35.0.0"
 }
 
 dependencies {
 
+    val composeVersion = "1.5.15"
+    //third party
+//    implementation("io.github.thanosfisherman.wifiutils:wifiutils:1.6.6")
+
+    implementation ("com.google.accompanist:accompanist-permissions:0.32.0")
+    implementation("androidx.compose.material:material-icons-core:$composeVersion")
+    implementation("androidx.compose.material:material-icons-extended:$composeVersion")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
