@@ -38,6 +38,16 @@ android {
         compose = true
     }
     buildToolsVersion = "35.0.0"
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs
+            .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
+            .forEach { output ->
+                val outputFileName = "NetworkAnalyzer_${variant.name}_v${variant.versionName}_${System.currentTimeMillis()}.apk"
+                output.outputFileName = outputFileName
+            }
+    }
 }
 
 dependencies {
