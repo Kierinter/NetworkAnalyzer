@@ -5,7 +5,6 @@ import java.util.Locale
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.telephony.TelephonyManager
 import android.net.wifi.WifiManager
 import androidx.core.app.ActivityCompat
 

@@ -1,12 +1,12 @@
 package com.kks3.networkanalyzer
 
-import android.media.audiofx.BassBoost.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -51,8 +51,9 @@ fun Setting(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(40.dp),
-        verticalArrangement = Arrangement.spacedBy(40.dp)
+            .systemBarsPadding()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 主题切换卡片
         Card(

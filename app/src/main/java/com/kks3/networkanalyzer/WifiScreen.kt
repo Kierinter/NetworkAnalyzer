@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NetworkWifi
@@ -153,7 +153,7 @@ fun WiFi(modifier: Modifier = Modifier) {
             wifiList = scanWifiInfo(context).sortedByDescending { it.level }
             isLoading = false
             wifiInformation(context)
-            delay(3000) // 每3秒刷新一次
+            delay(1500) // 每1.5秒刷新一次
         }
     }
     Log.d("WiFi", "isLoading: $isLoading")
@@ -161,6 +161,7 @@ fun WiFi(modifier: Modifier = Modifier) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .systemBarsPadding()
             .padding(16.dp)
     ) {
         when {
