@@ -1,6 +1,10 @@
 package com.kks3.networkanalyzer
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.telephony.CellIdentityNr
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
 import android.telephony.TelephonyManager
@@ -22,50 +26,65 @@ fun mobileInformation(context: Context):CellInfo ?{
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         
         // 检查权限
-        if (context.checkSelfPermission(android.Manifest.permission.READ_PHONE_STATE) != android.content.pm.PackageManager.PERMISSION_GRANTED ||
-            context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ||
+            context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return null
         }
         
-        // 获取所有小区信息
-        val cellInfoList = telephonyManager.allCellInfo
-        if (cellInfoList.isNullOrEmpty()) return null
+        // 获取信号强度
+        var signalStrength = -999
+        var baseStationId = "未知"
+        var frequency = "未知"
         
         // 获取当前活跃的小区信息
-        val activeCellInfo = cellInfoList[0]
-        
-        // 解析基站ID和频率
-        val baseStationId = when (activeCellInfo) {
-            is CellInfoLte -> {
-                val cellIdentity = activeCellInfo.cellIdentity
-                "eNB: ${cellIdentity.ci}"
-            }
-            is CellInfoNr -> {
-                val cellIdentity = activeCellInfo.cellIdentity
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    "NR: ${(cellIdentity as android.telephony.CellIdentityNr).nci}"
-                } else {
-                    "不支持的Android版本"
+        val cellInfoList = telephonyManager.allCellInfo
+        if (!cellInfoList.isNullOrEmpty()) {
+            val activeCellInfo = cellInfoList[0]
+            
+            // 获取信号强度
+            signalStrength = when (activeCellInfo) {
+                is CellInfoLte -> activeCellInfo.cellSignalStrength.dbm
+                is CellInfoNr -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        activeCellInfo.cellSignalStrength.dbm
+                    } else {
+                        -999
+                    }
                 }
+                else -> -999
             }
-            else -> "未知"
-        }
-        
-        // 获取频率信息
-        val frequency = when (activeCellInfo) {
-            is CellInfoLte -> {
-                val cellIdentity = activeCellInfo.cellIdentity
-                "${cellIdentity.earfcn} MHz"
-            }
-            is CellInfoNr -> {
-                val cellIdentity = activeCellInfo.cellIdentity
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    "${(cellIdentity as android.telephony.CellIdentityNr).nrarfcn} MHz"
-                } else {
-                    "不支持的Android版本"
+            
+            // 获取基站ID
+            baseStationId = when (activeCellInfo) {
+                is CellInfoLte -> {
+                    val cellIdentity = activeCellInfo.cellIdentity
+                    "eNB: ${cellIdentity.ci}"
                 }
+                is CellInfoNr -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        "NR: ${(activeCellInfo.cellIdentity as CellIdentityNr).nci}"
+                    } else {
+                        "不支持的Android版本"
+                    }
+                }
+                else -> "未知"
             }
-            else -> "未知"
+            
+            // 获取频率信息
+            frequency = when (activeCellInfo) {
+                is CellInfoLte -> {
+                    val cellIdentity = activeCellInfo.cellIdentity
+                    "${cellIdentity.earfcn} MHz"
+                }
+                is CellInfoNr -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        "${(activeCellInfo.cellIdentity as CellIdentityNr).nrarfcn} MHz"
+                    } else {
+                        "不支持的Android版本"
+                    }
+                }
+                else -> "未知"
+            }
         }
         
         // 获取运营商名称
@@ -79,9 +98,6 @@ fun mobileInformation(context: Context):CellInfo ?{
             TelephonyManager.NETWORK_TYPE_GPRS -> "2G"
             else -> "未知"
         }
-        
-        // 获取信号强度（这里使用一个默认值，实际应该通过SignalStrength获取）
-        val signalStrength = -85  // 这里需要通过其他方式获取实际的信号强度
         
         return CellInfo(
             networkOperatorName = operatorName,
@@ -102,9 +118,9 @@ fun mobileInformation(context: Context):CellInfo ?{
 fun cellSignalLevel(signalStrength: Int): String {
     if(signalStrength <0) {
         when (signalStrength) {
-            in -200..-116 -> return "信号弱"
-            in -115..-91 -> return "信号较好"
-            in -90..-65 -> return "信号强"
+            in -120..-91 -> return "信号弱"
+            in -90..-71 -> return "信号较好"
+            in -70..-50 -> return "信号强"
             else -> return "无信号"
         }
     }

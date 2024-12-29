@@ -1,7 +1,6 @@
 package com.kks3.networkanalyzer
 
 import android.Manifest
-import android.webkit.PermissionRequest
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -17,11 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import com.google.accompanist.permissions.isGranted
 
-@Preview(showSystemUi = true, device = Devices.PIXEL_7)
 @Composable
 fun MainScreen(
     isDarkTheme: Boolean,
