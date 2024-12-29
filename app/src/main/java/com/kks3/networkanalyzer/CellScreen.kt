@@ -9,47 +9,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-
-@Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label)
-        Text(
-            text = value,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}
-
-//@Preview(showSystemUi = true, device = Devices.PIXEL_7)
-//@Composable
-//fun CellPreview() {
-//    MaterialTheme {
-//        Cell()
-//    }
-//}
-//
+import java.lang.System.out
 
 @Composable
 fun Cell(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val cellInfoList = remember { mutableStateOf<List<CellInfo>>(emptyList()) }
-//    var isLoading by remember { mutableStateOf(false) }
-//    var error by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         while(true) {
-            cellInfoList.value = mobileInformation(context)
-            delay(1500) // 每1.5秒更新一次
+            try {
+                cellInfoList.value = mobileInformation(context)
+                isLoading = false
+                error = null
+            } catch (e: Exception) {
+                error = e.message
+            }
+            delay(1500)
         }
     }
 
@@ -59,9 +37,16 @@ fun Cell(modifier: Modifier = Modifier) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        cellInfoList.value.forEach { cellInfo ->
-            CellInfoCard(cellInfo)
-            outputCellInfo(cellInfo)
+        when {
+            error != null -> Text(text = "获取移动网络信息失败: $error")
+            isLoading -> Text(text = "正在获取移动网络信息...")
+            cellInfoList.value.isEmpty() -> Text(text = "未检测到SIM卡")
+            else -> {
+                cellInfoList.value.forEach { cellInfo ->
+                    CellInfoCard(cellInfo)
+                    out.println(cellInfo)
+                }
+            }
         }
     }
 }
@@ -111,3 +96,23 @@ fun CellInfoCard(cellInfo: CellInfo) {
         }
     }
 }
+@Composable
+private fun InfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label)
+        Text(
+            text = value,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+

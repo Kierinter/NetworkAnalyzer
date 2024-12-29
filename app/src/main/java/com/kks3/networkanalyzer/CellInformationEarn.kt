@@ -9,6 +9,7 @@ import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
+import android.util.Log
 
 data class CellInfo(
     val slotIndex: Int,                // 卡槽索引
@@ -27,20 +28,37 @@ fun mobileInformation(context: Context):List<CellInfo> {
     try {
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         
-        // 检查权限
-        if (context.checkSelfPermission(android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ||
-            context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        // 检查所有必需的权限
+        val permissions = arrayOf(
+            android.Manifest.permission.READ_PHONE_STATE,
+            android.Manifest.permission.READ_PHONE_NUMBERS,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+        
+        // 检查每个权限的状态并输出日志
+        permissions.forEach { permission ->
+            val isGranted = context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+            Log.d("CellInfo", "Permission $permission: ${if (isGranted) "Granted" else "Denied"}")
+        }
+
+        // 如果任何必需的权限未授予，返回空列表
+        if (permissions.any { context.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }) {
+            Log.d("CellInfo", "Some permissions are not granted")
             return emptyList()
         }
 
         // 获取SIM卡数量
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val activeModemCount = telephonyManager.activeModemCount
+            Log.d("CellInfo", "Active modem count: $activeModemCount")
+            
             for (slotIndex in 0 until activeModemCount) {
                 val subManager = context.getSystemService(SubscriptionManager::class.java)
                 val subInfo = subManager.getActiveSubscriptionInfoForSimSlotIndex(slotIndex)
                 
                 if (subInfo != null) {
+                    Log.d("CellInfo", "Found SIM in slot $slotIndex")
                     val subId = subInfo.subscriptionId
                     val perSimTelephony = telephonyManager.createForSubscriptionId(subId)
                     
@@ -121,10 +139,16 @@ fun mobileInformation(context: Context):List<CellInfo> {
                         frequency = frequency,
                         isDataEnabled = subId == SubscriptionManager.getDefaultDataSubscriptionId()
                     ))
+                } else {
+                    Log.d("CellInfo", "No SIM found in slot $slotIndex")
                 }
             }
+        } else {
+            Log.d("CellInfo", "Device API level is below Android R")
         }
+        
     } catch (e: Exception) {
+        Log.e("CellInfo", "Error getting mobile information", e)
         e.printStackTrace()
     }
     return cellInfoList

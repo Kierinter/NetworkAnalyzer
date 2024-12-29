@@ -32,7 +32,7 @@ fun MainScreen(
                     NavigationBarItem(
                         icon = {
                             when (item) {
-                                "Mobile" -> Icon(painter = painterResource(id = R.drawable.mobile_phone_smartphone_icon ), contentDescription = null)
+                                "Mobile" -> Icon(painter = painterResource(id = R.drawable.mobile_phone_smartphone_icon ),contentDescription = null)
                                 "WiFi" -> Icon(painter = painterResource(id = R.drawable.wifi_icon), contentDescription = null)
                                 "Settings" -> Icon(Icons.Filled.Settings, contentDescription = null)
                             }
@@ -52,7 +52,10 @@ fun MainScreen(
                     PermissionHandler(
                         permissions = listOf(
                             Manifest.permission.READ_PHONE_STATE,
-                            Manifest.permission.ACCESS_FINE_LOCATION
+                            Manifest.permission.READ_PHONE_NUMBERS,
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                            //Manifest.permission.READ_PRECISE_PHONE_STATE
                         ),
                         onPermissionsGranted = { cellPermissionGranted = true }
                     )
